@@ -44,9 +44,9 @@ class UserRegisterSerializer(serializers.ModelSerializer):
 
 class LoginSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(max_length=155, min_length=6)
-    password = serializers.CharField(max_length=68, write_only=True)
-    access_token = serializers.CharField(max_length=255, read_only=True)
-    refresh_token = serializers.CharField(max_length=255, read_only=True)
+    password=serializers.CharField(max_length=68, write_only=True)
+    access_token=serializers.CharField(max_length=255, read_only=True)
+    refresh_token=serializers.CharField(max_length=255, read_only=True)
 
     class Meta:
         model = User
@@ -55,16 +55,17 @@ class LoginSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         email = attrs.get('email')
         password = attrs.get('password')
+        request=self.context.get('request')
         user = authenticate(email=email, password=password)
         if not user:
-            raise AuthenticationFailed("Invalid credentials. Please try again.")
+            raise AuthenticationFailed("invalid credential try again")
         if not user.is_verified:
             raise AuthenticationFailed("Email is not verified")
-        tokens = user.tokens()
+        tokens=user.tokens()
         return {
-            'email': user.email,
-            "access_token": str(tokens.get('access')),
-            "refresh_token": str(tokens.get('refresh'))
+            'email':user.email,
+            "access_token":str(tokens.get('access')),
+            "refresh_token":str(tokens.get('refresh'))
         }
 
 

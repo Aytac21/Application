@@ -11,6 +11,8 @@ from accounts.models import User
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 from django.db.models import Q
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.views import APIView
 
 
 class CreateTaskView(generics.CreateAPIView):
@@ -35,20 +37,17 @@ class TaskListAPIView(generics.ListAPIView):
 
     
 
-class UserTaskListView(ListAPIView):
+class UserTaskListView(APIView):
     serializer_class = TaskSerializer
     permission_classes = [IsAuthenticated]
-    authentication_classes = [TokenAuthentication]
+    authentication_classes = [JWTAuthentication]
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Task.objects.filter(user = user)
-        return queryset
-    
-    
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+        return Task.objects.filter(user=user)
 
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
         connection_completed_count = queryset.filter(task_type='connection', status='completed').count()
         problem_completed_count = queryset.filter(task_type='problem', status='completed').count()
         completed_count = queryset.filter(status='completed').count()
@@ -59,7 +58,7 @@ class UserTaskListView(ListAPIView):
             'completed_count': completed_count
         }
 
-        serializer = self.get_serializer(queryset, many=True)
+        serializer = self.serializer_class(queryset, many=True)
         response_data = {
             'tasks': serializer.data,
             'summary': context

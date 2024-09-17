@@ -16,17 +16,31 @@ const required = (value) => {
     }
 };
 
-const refreshAccessToken = async () => {
-    const refresh_token = localStorage.getItem('refresh_token');
-    if (!refresh_token) {
-        throw new Error('No refresh token available');
-    }
+async function refreshAccessToken() {
+    try {
+        const response = await fetch('http://135.181.42.192/accounts/token/refresh/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                refreshToken: localStorage.getItem('refresh'),
+            }),
+        });
 
-    const response = await axios.post('http://135.181.42.192/accounts/token/refresh/', { refresh: refresh_token });
-    const { access } = response.data;
-    localStorage.setItem('access_token', access);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${access}`;
-};
+        if (!response.ok) {
+            throw new Error('Failed to refresh token');
+        }
+
+        const data = await response.json();
+        localStorage.setItem('access', data.accessToken);
+        return data.accessToken;
+    } catch (error) {
+        console.error('Token refresh failed:', error);
+        throw error;
+    }
+}
+
 
 const Login = (props) => {
     let navigate = useNavigate();
@@ -36,7 +50,6 @@ const Login = (props) => {
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
-    const [rememberMe, setRememberMe] = useState(false);
     const [errors, setErrors] = useState({});
 
     const { isLoggedIn } = useSelector(state => state.auth);
@@ -44,21 +57,11 @@ const Login = (props) => {
     const dispatch = useDispatch();
 
     useEffect(() => {
-        const savedEmail = localStorage.getItem('saved_email') || sessionStorage.getItem('saved_email');
-        const savedPassword = localStorage.getItem('saved_password') || sessionStorage.getItem('saved_password');
-        if (savedEmail) {
-            setEmail(savedEmail);
-        }
-        if (savedPassword) {
-            setPassword(savedPassword);
-        }
-        const savedRememberMe = localStorage.getItem('remember_me') === 'true';
-        setRememberMe(savedRememberMe);
-
         const interval = setInterval(refreshAccessToken, 15 * 60 * 1000);
-
         return () => clearInterval(interval);
     }, []);
+
+
 
     const onChangeEmail = (e) => {
         setEmail(e.target.value);
@@ -68,13 +71,8 @@ const Login = (props) => {
         setPassword(e.target.value);
     };
 
-    const toggleRememberMe = () => {
-        setRememberMe(!rememberMe);
-    };
-
     const handleLogin = async (e) => {
         e.preventDefault();
-
         setLoading(true);
         setErrors({});
 
@@ -94,44 +92,24 @@ const Login = (props) => {
         }
 
         try {
-        
             const response = await axios.post(
                 'http://135.181.42.192/accounts/login/',
-                { email, password, remember_me: rememberMe },
-                { headers: { 'Content-Type': 'application/json' } },
-                { withCredentials: true }
+                { email, password },
+                { headers: { 'Content-Type': 'application/json' } }
             );
 
             console.log('Login successful:', response.data);
 
-            const { access_token, refresh_token, user_type, is_admin, phone } = response.data;
+            const { access_token, refresh_token } = response.data;
 
-            if (rememberMe) {
-                localStorage.setItem('access_token', "");
-                localStorage.setItem('refresh_token', "");
-                localStorage.setItem('access_token', access_token);
-                localStorage.setItem('refresh_token', refresh_token);
-                localStorage.setItem('saved_email', email);
-                localStorage.setItem('saved_password', password);
-                localStorage.setItem('remember_me', 'true');
-                localStorage.setItem('user_type', user_type);
-                localStorage.setItem('phone', phone);
-                localStorage.setItem('is_admin', is_admin);
-            } else {
-                localStorage.setItem('access_token', access_token);
-                localStorage.setItem('refresh_token', refresh_token);
-                localStorage.setItem('is_admin', is_admin);
-                localStorage.setItem('user_type', user_type);
-                localStorage.setItem('phone', phone);
-                localStorage.removeItem('saved_email');
-                localStorage.removeItem('saved_password');
-                localStorage.removeItem('remember_me');
-            }
+            // Save tokens in localStorage
+            localStorage.setItem('access_token', access_token);
+            localStorage.setItem('refresh_token', refresh_token);
 
             axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
 
             navigate("/");
-            window.location.reload();
+
         } catch (error) {
             console.log('Login failed:', error.response ? error.response.data : error.message);
 
@@ -139,9 +117,8 @@ const Login = (props) => {
 
             const newErrors = {};
 
-            if (error.response && error.response.data) {
+            if (error.response) {
                 const serverErrors = error.response.data;
-                console.log(serverErrors)
                 if (serverErrors.detail) {
                     newErrors.global = "Giriş Məlumatları Yanlışdır.\nYanlış e-poçt ünvanı və ya şifrə.";
                 } else if (serverErrors.non_field_errors) {
@@ -149,13 +126,15 @@ const Login = (props) => {
                 } else {
                     newErrors.global = "Giriş Məlumatları Yanlışdır.\nYanlış e-poçt ünvanı və ya şifrə.";
                 }
-
-                setErrors(newErrors);
+            } else if (error.request) {
+                newErrors.global = "Server cavab vermir. Zəhmət olmasa bir az sonra yenidən cəhd edin.";
             } else {
-                setErrors({ global: "Giriş zamanı xətaya yol verildi. Yenidən cəhd edin." });
+                newErrors.global = "Giriş zamanı xətaya yol verildi. Yenidən cəhd edin.";
             }
+            setErrors(newErrors);
         }
     };
+
 
     if (isLoggedIn) {
         return <Navigate to="/" />;
@@ -204,17 +183,17 @@ const Login = (props) => {
                                 </label>
                                 {errors.password && <div className="error-message">{errors.password}</div>}
                             </div>
-                            <div className="remember-me">
+                            {/* <div className="remember-me">
                                 <label>
                                     <input type="checkbox" name="" id="" checked={rememberMe}
                                         onChange={toggleRememberMe} />
                                     Məni xatırla
                                 </label>
                                 <Link to="/re-password">Şifrəni unutmusunuz?</Link>
-                            </div>
-                            {loading && (
+                            </div> */}
+                            {/* {loading && (
                                 <span className="spinner-border spinner-border-sm"></span>
-                            )}
+                            )} */}
                             <button type="submit">Daxil ol</button>
                         </div>
                         {errors.global ? (

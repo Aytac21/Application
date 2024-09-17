@@ -13,20 +13,30 @@ import { RiVoiceprintFill } from "react-icons/ri";
 import photo1 from "../../assets/images/photo.svg";
 import MeetingDetailModal from "../../components/MeetingDetailModal";
 
-const refreshAccessToken = async () => {
-    const refresh_token = localStorage.getItem("refresh_token");
-    if (!refresh_token) {
-        throw new Error("No refresh token available");
-    }
+async function refreshAccessToken() {
+    try {
+        const response = await fetch('http://135.181.42.192/accounts/token/refresh/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                refreshToken: localStorage.getItem('refreshToken'),
+            }),
+        });
 
-    const response = await axios.post(
-        "http://135.181.42.192/accounts/token/refresh/",
-        { refresh: refresh_token }
-    );
-    const { access } = response.data;
-    localStorage.setItem("access_token", access);
-    axios.defaults.headers.common["Authorization"] = `Bearer ${access}`;
-};
+        if (!response.ok) {
+            throw new Error('Failed to refresh token');
+        }
+
+        const data = await response.json();
+        localStorage.setItem('accessToken', data.accessToken);
+        return data.accessToken;
+    } catch (error) {
+        console.error('Token refresh failed:', error);
+        throw error;
+    }
+}
 
 const Home = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);

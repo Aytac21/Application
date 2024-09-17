@@ -1,92 +1,47 @@
 import axios from "axios";
 
-const refreshAccessToken = async () => {
-  const refresh_token = localStorage.getItem("refresh_token");
-  if (!refresh_token) {
-    throw new Error("No refresh token available");
-  }
+// Define action types
+export const LOGIN_SUCCESS = "LOGIN_SUCCESS";
+export const LOGIN_FAIL = "LOGIN_FAIL";
+export const LOGOUT = "LOGOUT";
+
+// Action to handle login
+export const login = (email, password, rememberMe) => async (dispatch) => {
   try {
     const response = await axios.post(
-      "http://135.181.42.192/accounts/token/refresh/",
-      {
-        refresh: refresh_token,
-      }
+      "http://135.181.42.192/accounts/login/",
+      { email, password, remember_me: rememberMe },
+      { headers: { "Content-Type": "application/json" }, withCredentials: true }
     );
-    const { access } = response.data;
-    localStorage.setItem("access_token", access);
-    axios.defaults.headers.common["Authorization"] = `Bearer ${access}`;
-    return access;
-  } catch (error) {
-    console.error("Error refreshing token:", error);
-    throw error;
-  }
-};
 
-const fetchWithAuth = async (url, options = {}, retry = true) => {
-  const token = localStorage.getItem("access_token");
-  try {
-    const response = await axios({
-      url,
-      ...options,
-      headers: {
-        ...options.headers,
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    if (
-      error.response &&
-      (error.response.status === 401 || error.response.status === 403) &&
-      retry
-    ) {
-      try {
-        const newAccessToken = await refreshAccessToken();
-        axios.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${newAccessToken}`;
-        return fetchWithAuth(url, options, false);
-      } catch (refreshError) {
-        console.error("Error: Token refresh failed:", refreshError);
-        throw refreshError;
-      }
+    const { access_token, refresh_token, user_type, is_admin } = response.data;
+
+    // Store tokens and user info
+    if (rememberMe) {
+      localStorage.setItem("access_token", access_token);
+      localStorage.setItem("refresh_token", refresh_token);
+      localStorage.setItem("saved_email", email);
+      localStorage.setItem("saved_password", password);
+      localStorage.setItem("remember_me", "true");
     } else {
-      throw error;
+      sessionStorage.setItem("access_token", access_token);
+      sessionStorage.setItem("refresh_token", refresh_token);
     }
-  }
-};
 
-export const updateProfileWithAuth = async (url, data, retry = true) => {
-  const token = localStorage.getItem("access_token");
-  try {
-    const response = await axios.patch(url, data, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
+    axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
+
+    dispatch({
+      type: LOGIN_SUCCESS,
+      payload: { access_token, refresh_token, user_type, is_admin },
     });
-
-    return response.data;
   } catch (error) {
-    if (
-      error.response &&
-      (error.response.status === 401 || error.response.status === 403) &&
-      retry
-    ) {
-      try {
-        const newAccessToken = await refreshAccessToken();
-        axios.defaults.headers.common[
-          "Authorization"
-        ] = `Bearer ${newAccessToken}`;
-        return updateProfileWithAuth(url, data, false);
-      } catch (refreshError) {
-        console.error("Error: Token refresh failed:", refreshError);
-        throw refreshError;
-      }
-    } else {
-      throw error;
-    }
+    dispatch({ type: LOGIN_FAIL, payload: error.response.data });
   }
 };
 
-export { refreshAccessToken, fetchWithAuth };
+// Action to handle logout
+export const logout = () => (dispatch) => {
+  localStorage.clear();
+  sessionStorage.clear();
+  dispatch({ type: LOGOUT });
+};

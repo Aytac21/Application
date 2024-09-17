@@ -1,99 +1,37 @@
-import {
-  REGISTER_SUCCESS,
-  REGISTER_FAIL,
-  LOGIN_SUCCESS,
-  LOGIN_FAIL,
-  LOGOUT,
-  SET_MESSAGE,
-} from "./types";
+import axios from "axios";
 
-import AuthService from "../services/auth.service";
+export const LOGIN_SUCCESS = "LOGIN_SUCCESS";
+export const LOGIN_FAIL = "LOGIN_FAIL";
+export const LOGOUT = "LOGOUT";
 
-export const register = (username, email, password) => (dispatch) => {
-  return AuthService.register(username, email, password).then(
-    (response) => {
-      dispatch({
-        type: REGISTER_SUCCESS,
-      });
+export const login = (email, password) => async (dispatch) => {
+  try {
+    const response = await axios.post(
+      "http://135.181.42.192/accounts/login/",
+      { email, password },
+      { headers: { "Content-Type": "application/json" }, withCredentials: true }
+    );
 
-      dispatch({
-        type: SET_MESSAGE,
-        payload: response.data.message,
-      });
+    const { access_token, refresh_token, user_type, is_admin } = response.data;
 
-      return Promise.resolve();
-    },
-    (error) => {
-      const message =
-        (error.response &&
-          error.response.data &&
-          error.response.data.message) ||
-        error.message ||
-        error.toString();
+    sessionStorage.setItem("access_token", access_token);
+    sessionStorage.setItem("refresh_token", refresh_token);
+    sessionStorage.setItem("saved_email", email);
+    sessionStorage.setItem("saved_password", password);
 
-      dispatch({
-        type: REGISTER_FAIL,
-      });
+    axios.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
 
-      dispatch({
-        type: SET_MESSAGE,
-        payload: message,
-      });
-
-      return Promise.reject();
-    }
-  );
-};
-
-export const login = (email, password) => (dispatch) => {
-  return AuthService.login(email, password).then(
-    (data) => {
-      dispatch({
-        type: LOGIN_SUCCESS,
-        payload: { user: data },
-      });
-
-      return Promise.resolve();
-    },
-    (error) => {
-      const message =
-        (error.response &&
-          error.response.data &&
-          error.response.data.message) ||
-        error.message ||
-        error.toString();
-
-      dispatch({
-        type: LOGIN_FAIL,
-      });
-
-      dispatch({
-        type: SET_MESSAGE,
-        payload: message,
-      });
-
-      return Promise.reject();
-    }
-  );
+    dispatch({
+      type: LOGIN_SUCCESS,
+      payload: { access_token, refresh_token, user_type, is_admin },
+    });
+  } catch (error) {
+    dispatch({ type: LOGIN_FAIL, payload: error.response.data });
+  }
 };
 
 export const logout = () => (dispatch) => {
-  AuthService.logout();
-  dispatch({
-    type: LOGOUT,
-  });
+  localStorage.clear();
+  sessionStorage.clear();
+  dispatch({ type: LOGOUT });
 };
-
-export const setToken = (token) => {
-  return {
-    type: "SET_TOKEN",
-    payload: token,
-  };
-};
-
-export const SET_USER = "SET_USER";
-
-export const setUser = (user) => ({
-  type: SET_USER,
-  payload: user,
-});

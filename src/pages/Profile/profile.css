@@ -196,3 +196,7 @@ margin: 0 !important;
   width: 96%;
   max-height: 100px;
 }
+
+.profile-photo img {
+  width: 300px;
+}

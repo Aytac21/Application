@@ -37,10 +37,11 @@ html, body {
   flex: 1;
   margin-top: 60px;
   background-color: rgba(128, 128, 128, 0.103);
-  padding: 25px;
+  padding: 25px 20px;
   height: calc(100vh - 60px); 
   overflow-y: auto; 
   margin-left: 200px;
+  scrollbar-width: thin;
 }
 
 .layout-with-sidebar .main-content:has(.chat-container) {

@@ -84,9 +84,9 @@ const App = () => {
         },
         {
 
-          enableHighAccuracy: true,  
-          timeout: 10000,            
-          maximumAge: 10000             
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 10000
 
         }
       );
@@ -123,7 +123,7 @@ const App = () => {
 
   return (
     <UserProvider>
-      <RouterProvider router={routers} />
+      <RouterProvider router={routers} forceRefresh />
     </UserProvider>
   );
 };

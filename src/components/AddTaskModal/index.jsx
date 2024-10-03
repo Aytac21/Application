@@ -74,9 +74,7 @@ const CreateTaskModal = ({ onClose, onTaskCreated }) => {
     const handleChange = (e) => {
         const { name, value } = e.target;
 
-        // Check if the input field is the contact field
         if (name === "contact_number" || name == "registration_number") {
-            // Allow only numbers, spaces, and the characters ()+
             const filteredValue = value.replace(/[^0-9()+\s]/g, "");
 
             setFormData((prevState) => ({
@@ -211,7 +209,6 @@ const CreateTaskModal = ({ onClose, onTaskCreated }) => {
     };
 
 
-
     const renderGroups = () => {
         return groups.map((group) => (
             <div key={group.id} className="dropdown-task-item" onClick={() => handleGroupSelect(group.id)}>
@@ -274,7 +271,6 @@ const CreateTaskModal = ({ onClose, onTaskCreated }) => {
     const handleChangeMapLink = (event) => {
         const { value } = event.target;
 
-        // Call handleMapLink with the new value to update latitude and longitude
         handleMapLink(value);
     };
 
@@ -449,7 +445,7 @@ const CreateTaskModal = ({ onClose, onTaskCreated }) => {
                             </div>
                             {errors.service && <span className="error-message">{errors.service}</span>}
                         </div>
-                        <div className="form-group">
+                        <div className="form-group add-task-group-dropdown">
                             <label>Texniki qrup:</label>
                             <div className="dropdown-task" ref={dropdownRef}>
                                 <div

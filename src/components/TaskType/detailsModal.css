@@ -16,8 +16,8 @@
     padding: 20px;
     border-radius: 24px;
     width: 80%;
-    max-width: 52%;
-    max-height: 90vh;
+    max-width: 54%;
+    max-height: 88vh;
     overflow-y: auto;
     box-sizing: border-box;
 }
@@ -149,7 +149,7 @@
 
 .taskType-photo img{
   height: 16vh;
-  width: max-content;
+  width: 120px;
   object-fit: contain;
 }
 
@@ -172,6 +172,8 @@
 .details-info > div > div{
 padding: 0;
 margin-bottom: 10px;
+z-index: revert-layer;
+position: relative;
 }
 
   
@@ -323,6 +325,10 @@ z-index: 10000;
 
   }
 
+  .dropdown-task {
+    position: relative;
+  }
+
   #details-task .dropdown-task-toggle {
     padding: 9px;
     gap: 15px;
@@ -342,8 +348,10 @@ z-index: 10000;
   }
 
   #details-task .dropdown-task-menu{
-    margin-top: 8px;
-    width: 100%;
+    top: 60px !important;
+    width: 58%;
+    left: 127px !important;
+
   }
 
   #details-task .dropdown-task-item{
@@ -464,6 +472,7 @@ z-index: 10000;
     right: 0px;
     gap: 3px;
     width: 54%;
+    z-index: 100;
   }
 
   .task-type-select .taskType-options .taskType-option {
@@ -493,6 +502,7 @@ z-index: 10000;
     .passportUpdate label {
       font-size: 18px;
       align-items: center;
+      width: 50vh !important;
     }
     .passportUpdate label>span {
       color: #005abf;
@@ -534,4 +544,9 @@ z-index: 10000;
   font-family: Nunito Sans, sans-serif;
   font-size: 18px;
   font-weight: 600;
+}
+
+.taskDetailTime{
+  display: flex;
+  gap: 5px;
 }

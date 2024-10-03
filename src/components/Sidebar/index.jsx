@@ -120,6 +120,7 @@ const Sidebar = ({ children, isSidebarOpen, onClose }) => {
                 {
                     menuItems.map((item, index) => (
                         <NavLink
+                            reloadDocument
                             to={item.path}
                             key={index}
                             className="aside-link"

@@ -20,6 +20,7 @@ const AddSurveyModal = ({ onClose, selectedServices, taskId, onSurveyAdded }) =>
             optical_cable: '',
             fastconnector: '',
             siqnal: '',
+            internet_packs: '',
         },
         voice: {
             photo_modem: null,
@@ -346,6 +347,19 @@ const AddSurveyModal = ({ onClose, selectedServices, taskId, onSurveyAdded }) =>
                                                                         type="text"
                                                                         name="siqnal"
                                                                         value={surveyData.internet.siqnal}
+                                                                        data-service="internet"
+                                                                        onChange={handleInputChange}
+                                                                    />
+                                                                </div>
+                                                                <hr />
+                                                            </div>
+                                                            <div>
+                                                                <div className="form-group">
+                                                                    <label>İnternet tarifi:</label>
+                                                                    <input
+                                                                        type="text"
+                                                                        name="internet_packs"
+                                                                        value={surveyData.internet.internet_packs}
                                                                         data-service="internet"
                                                                         onChange={handleInputChange}
                                                                     />

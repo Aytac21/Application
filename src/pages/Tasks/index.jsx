@@ -48,11 +48,11 @@ function Index() {
 
     useEffect(() => {
         const storedUserType = localStorage.getItem('user_type') || sessionStorage.getItem('user_type');
-        const storedUserPhone = localStorage.getItem('phone') || sessionStorage.getItem('phonw');
+        const storedUserPhone = localStorage.getItem('phone') || sessionStorage.getItem('phone');
         setUserType(storedUserType);
         setUserPhone(storedUserPhone);
 
-        fetchTasks("all", selectedMonth, selectedYear, "Hamısı");
+        fetchTasks(selectedMonth, selectedYear, "Hamısı", activeFilter);
     }, [selectedMonth, selectedYear, activeFilter, selectedStatusFilter]);
 
     const statusRef = useRef(null);
@@ -94,7 +94,7 @@ function Index() {
         "İyul", "Avqust", "Sentyabr", "Oktyabr", "Noyabr", "Dekabr"
     ];
 
-    const fetchTasks = async (taskFilter, selectedMonth, selectedYear, statusFilter) => {
+    const fetchTasks = async (taskFilter, selectedMonth, selectedYear, statusFilter, activeFilter) => {
         if (!selectedMonth) return;
 
         try {
@@ -141,6 +141,7 @@ function Index() {
         const newDate = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + change);
         setSelectedMonth(newDate);
         setSelectedYear(newDate.getFullYear());
+        // setActiveFilter(taskFilter);
         setSelectedStatusFilter(selectedStatusFilter);
         fetchTasks(activeFilter, newDate, newDate.getFullYear(), selectedStatusFilter);
     };
@@ -150,11 +151,12 @@ function Index() {
         setSelectedMonth(selectedMonth);
         setSelectedYear(selectedYear);
         setSelectedStatusFilter(selectedStatusFilter);
-        fetchTasks(taskFilter, selectedMonth, selectedYear, selectedStatusFilter);
+        fetchTasks(taskFilter, selectedMonth, selectedYear, selectedStatusFilter, activeFilter);
     };
 
     const filterData = (filter) => {
-        applyFilters(filter, selectedMonth, selectedYear, selectedStatusFilter);
+        applyFilters(filter, selectedMonth, selectedYear, selectedStatusFilter, activeFilter);
+        setActiveFilter(filter);
     };
 
     const filterByStatus = (statusFilter) => {
@@ -299,7 +301,7 @@ function Index() {
 
     useEffect(() => {
         fetchTasks(activeFilter, selectedMonth, selectedYear, selectedStatusFilter);
-    }, [selectedMonth, selectedYear, activeFilter, selectedStatusFilter]);
+    }, [activeFilter, selectedMonth, selectedYear, selectedStatusFilter]);
 
     return (
         <div className='task-page'>

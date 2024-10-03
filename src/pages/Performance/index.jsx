@@ -180,7 +180,7 @@ function Index() {
         <div className='performance-filter'>
           <div>
             <button onClick={() => setIsGroupModalOpen(!isGroupModalOpen)}>
-              <span>Group:</span>
+              <span>Qrup:</span>
               <span>{selectedGroupFilter}</span>
               <FaChevronDown />
             </button>

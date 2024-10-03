@@ -41,6 +41,7 @@ function UpdateInternetModal({ onClose, serviceId, serviceData, onServiceUpdate 
         data.append('optical_cable', formData.optical_cable || '');
         data.append('fastconnector', formData.fastconnector || '');
         data.append('siqnal', formData.siqnal || '');
+        data.append('internet_packs', formData.internet_packs || '');
 
         if (formData.photo_modem instanceof File) {
             data.append('photo_modem', formData.photo_modem);
@@ -118,6 +119,12 @@ function UpdateInternetModal({ onClose, serviceId, serviceData, onServiceUpdate 
                                         Siqnal:
                                     </label>
                                     <input type="text" name="siqnal" value={formData.siqnal || ''} onChange={handleInputChange} />
+                                </div>
+                                <div className="form-group">
+                                    <label>
+                                        İnternet tarifi:
+                                    </label>
+                                    <input type="text" name="internet_packs" value={formData.internet_packs || ''} onChange={handleInputChange} />
                                 </div>
                             </div>
                             <hr />

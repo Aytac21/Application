@@ -106,8 +106,8 @@
 
 .login-mail-password div:last-of-type{
     flex-direction: row;
-    align-items: center;
     justify-content: space-between;
+    flex-direction: column;
 }
 
 .login-mail-password div label:not(.remember-me label){
@@ -170,6 +170,7 @@
 
 .login-eye button{
     position: absolute;
+    top: 12px;
     right: 5px;
     cursor: pointer;
     background-color: inherit;

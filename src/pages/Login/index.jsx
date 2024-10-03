@@ -76,21 +76,6 @@ const Login = (props) => {
         setLoading(true);
         setErrors({});
 
-        const newErrors = {};
-
-        if (!email) {
-            newErrors.email = "Emaili daxil edin!";
-        }
-        if (!password) {
-            newErrors.password = "Şifrəni daxil edin!";
-        }
-
-        if (Object.keys(newErrors).length > 0) {
-            setErrors(newErrors);
-            setLoading(false);
-            return;
-        }
-
         try {
             const response = await axios.post(
                 'http://135.181.42.192/accounts/login/',
@@ -98,42 +83,23 @@ const Login = (props) => {
                 { headers: { 'Content-Type': 'application/json' } }
             );
 
-            console.log('Login successful:', response.data);
-
             const { access_token, refresh_token } = response.data;
 
-            // Save tokens in localStorage
             localStorage.setItem('access_token', access_token);
             localStorage.setItem('refresh_token', refresh_token);
 
             axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
 
+            // Dispatch login success action
+            dispatch({ type: 'LOGIN_SUCCESS', payload: { token: access_token } });
+
             navigate("/");
-
         } catch (error) {
-            console.log('Login failed:', error.response ? error.response.data : error.message);
-
             setLoading(false);
-
-            const newErrors = {};
-
-            if (error.response) {
-                const serverErrors = error.response.data;
-                if (serverErrors.detail) {
-                    newErrors.global = "Giriş Məlumatları Yanlışdır.\nYanlış e-poçt ünvanı və ya şifrə.";
-                } else if (serverErrors.non_field_errors) {
-                    newErrors.global = serverErrors.non_field_errors[0];
-                } else {
-                    newErrors.global = "Giriş Məlumatları Yanlışdır.\nYanlış e-poçt ünvanı və ya şifrə.";
-                }
-            } else if (error.request) {
-                newErrors.global = "Server cavab vermir. Zəhmət olmasa bir az sonra yenidən cəhd edin.";
-            } else {
-                newErrors.global = "Giriş zamanı xətaya yol verildi. Yenidən cəhd edin.";
-            }
-            setErrors(newErrors);
+            // Handle errors
         }
     };
+
 
 
     if (isLoggedIn) {

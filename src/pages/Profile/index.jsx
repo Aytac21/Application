@@ -19,29 +19,34 @@ const Profile = () => {
   ]);
   const [previewImage, setPreviewImage] = useState('');
 
-  const refreshAccessToken = async () => {
-    const refresh_token = localStorage.getItem("refresh_token");
-    if (!refresh_token) {
-      throw new Error("No refresh token available");
-    }
-
+  async function refreshAccessToken() {
     try {
-      const response = await axios.post(
-        "http://135.181.42.192/accounts/token/refresh/",
-        { refresh: refresh_token }
-      );
-      const { access } = response.data;
-      localStorage.setItem("access_token", access);
-      axios.defaults.headers.common["Authorization"] = `Bearer ${access}`;
+        const response = await fetch('http://135.181.42.192/accounts/token/refresh/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                refreshToken: localStorage.getItem('refreshToken'),
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to refresh token');
+        }
+
+        const data = await response.json();
+        localStorage.setItem('accessToken', data.accessToken);
+        return data.accessToken;
     } catch (error) {
-      console.error("Error refreshing token:", error);
-      throw error; // Rethrow to handle in fetchData
+        console.error('Token refresh failed:', error);
+        throw error;
     }
-  };
+}
 
   const fetchData = async () => {
     try {
-      await refreshAccessToken(); // Ensure token is refreshed before fetching data
+      await refreshAccessToken();
 
       const [profileResponse, groupsResponse] = await Promise.all([
         axios.get('http://135.181.42.192/accounts/profile/'),
@@ -50,7 +55,7 @@ const Profile = () => {
 
       setProfileData(profileResponse.data);
       setGroups(groupsResponse.data);
-      setPreviewImage(profileResponse.data.profil_picture || ''); // Set initial preview image
+      setPreviewImage(profileResponse.data.profil_picture || '');
       setLoading(false);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -80,7 +85,7 @@ const Profile = () => {
         ...profileData,
         profil_picture: file
       });
-      setPreviewImage(URL.createObjectURL(file)); // Set the preview image
+      setPreviewImage(URL.createObjectURL(file));
     }
   };
 
@@ -109,15 +114,23 @@ const Profile = () => {
         formData.append(key, profileData[key]);
       }
 
-      await refreshAccessToken(); // Ensure token is refreshed before saving data
+      await refreshAccessToken();
 
       const response = await axios.patch('http://135.181.42.192/accounts/profile_update/', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'multipart/form-data',
+          "Authorization": `Bearer ${sessionStorage.getItem("access_token")}`
         }
       });
 
-      setProfileData(response.data); // Update state with response data
+      setProfileData(response.data);
+
+      // Update the session storage or clear it as needed
+      sessionStorage.setItem('saved_email', response.data.email || '');
+      sessionStorage.setItem('saved_phone', response.data.phone || '');
+      sessionStorage.setItem('saved_user_type', response.data.user_type || '');
+      sessionStorage.setItem('saved_group', response.data.groupName || '');
+
       alert('Profile updated successfully!');
       setEditMode(false);
     } catch (error) {
@@ -233,9 +246,9 @@ const Profile = () => {
                     </div>
                     {showGroupDropdown && (
                       <div className="profile-multi-select-dropdown">
-                        <label htmlFor="closeGroupsDropdown">
-                          Qrup
-                          <span className="close-dropdown" id="closeGroupsDropdown" onClick={() => setShowGroupDropdown(false)}>&times;</span>
+                        <label htmlFor="closeGroupDropdown">
+                          Qruplar
+                          <span className="close-dropdown" id="closeGroupDropdown" onClick={() => setShowGroupDropdown(false)}>&times;</span>
                         </label>
                         {groups.map(group => (
                           <div
@@ -250,7 +263,7 @@ const Profile = () => {
                     )}
                   </>
                 ) : (
-                  <input type="text" id="group" value={profileData.groupName || 'Qrup daxil edilməyib'} disabled />
+                  <input type="text" id="groupName" value={profileData.groupName || 'Qrup daxil edilməyib'} disabled />
                 )}
               </div>
             </div>
@@ -259,6 +272,6 @@ const Profile = () => {
       )}
     </div>
   );
-};
+}
 
 export default Profile;
